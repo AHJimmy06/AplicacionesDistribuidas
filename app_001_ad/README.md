@@ -37,7 +37,7 @@ Los dos equipos deben estar conectados a la misma red Wi-Fi.
    dotnet run --urls "http://0.0.0.0:5050"
    ```
 
-La API escucha en `http://0.0.0.0:5050`. En este equipo la IPv4 actual es `192.168.100.132`, pero puede cambiar al conectarse a otra red.
+La API escucha en `http://0.0.0.0:5050`. La IPv4 del servidor puede cambiar al conectarse a otra red, por lo que debe consultarse con `ipconfig`.
 
 ### Equipo cliente
 
@@ -47,12 +47,6 @@ La API escucha en `http://0.0.0.0:5050`. En este equipo la IPv4 actual es `192.1
    ```powershell
    flutter run --dart-define=API_BASE_URL=http://IP_DEL_SERVIDOR:5050
    ```
-
-Ejemplo con la IP actual:
-
-```powershell
-flutter run --dart-define=API_BASE_URL=http://192.168.100.132:5050
-```
 
 Para un celular físico u otro equipo siempre se debe indicar la IP del servidor mediante `API_BASE_URL`.
 
@@ -66,4 +60,10 @@ Para un celular físico u otro equipo siempre se debe indicar la IP del servidor
 6. Confirmar una eliminación y comprobar el mensaje y la lista actualizada.
 7. Detener la API e intentar una operación para comprobar el mensaje de error.
 
-No se requiere modificar la base de datos para ejecutar estos cambios. La API valida que `Name` tenga entre 2 y 200 caracteres, `Price` sea mayor que cero y compatible con `decimal(10,2)`, y `Stock` no sea negativo.
+El formulario bloquea los caracteres inválidos mientras se escribe o pega y muestra las validaciones en español durante la interacción:
+
+- Nombre: obligatorio, entre 2 y 200 letras, sin números, espacios, emojis ni símbolos.
+- Precio: obligatorio, mayor que cero, máximo `99999999,99` y hasta 2 decimales.
+- Stock: obligatorio, entero y no negativo.
+
+La API repite estas validaciones como segunda barrera.

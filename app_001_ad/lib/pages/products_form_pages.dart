@@ -79,43 +79,43 @@ class _ProductFormPageState extends State<ProductFormPage> {
 
   String? validateName(String? value) {
     final name = value ?? '';
-    if (name.trim().isEmpty) return 'Name is required.';
-    if (RegExp(r'\s').hasMatch(name)) return 'Name cannot contain spaces.';
-    if (name.length < 2) return 'Name must have at least 2 characters.';
-    if (name.length > 200) return 'Name cannot exceed 200 characters.';
-    if (!RegExp(r'^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ]+$').hasMatch(name)) {
-      return 'Name can only contain letters and numbers, without spaces.';
+    if (name.trim().isEmpty) return 'El nombre es obligatorio.';
+    if (RegExp(r'\s').hasMatch(name)) return 'El nombre no puede tener espacios.';
+    if (name.length < 2) return 'El nombre debe tener al menos 2 letras.';
+    if (name.length > 200) return 'El nombre no puede superar 200 letras.';
+    if (!RegExp(r'^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]+$').hasMatch(name)) {
+      return 'El nombre solo puede contener letras.';
     }
     return null;
   }
 
   String? validatePrice(String? value) {
     if (RegExp(r'\s').hasMatch(value ?? '')) {
-      return 'Price cannot contain spaces.';
+      return 'El precio no puede tener espacios.';
     }
     final text = value?.trim().replaceAll(',', '.') ?? '';
     final price = double.tryParse(text);
-    if (text.isEmpty) return 'Price is required.';
-    if (price == null) return 'Enter a valid price.';
-    if (price <= 0) return 'Price must be greater than zero.';
-    if (price > 99999999.99) return 'Price exceeds the allowed maximum.';
+    if (text.isEmpty) return 'El precio es obligatorio.';
+    if (price == null) return 'Ingrese un precio válido.';
+    if (price <= 0) return 'El precio debe ser mayor que cero.';
+    if (price > 99999999.99) return 'El precio supera el máximo permitido.';
 
     final parts = text.split('.');
     if (parts.length > 2 || (parts.length == 2 && parts[1].length > 2)) {
-      return 'Price can have at most 2 decimal places.';
+      return 'El precio puede tener máximo 2 decimales.';
     }
     return null;
   }
 
   String? validateStock(String? value) {
     if (RegExp(r'\s').hasMatch(value ?? '')) {
-      return 'Stock cannot contain spaces.';
+      return 'El stock no puede tener espacios.';
     }
     final text = value?.trim() ?? '';
     final stock = int.tryParse(text);
-    if (text.isEmpty) return 'Stock is required.';
-    if (stock == null) return 'Stock must be a whole number.';
-    if (stock < 0) return 'Stock cannot be negative.';
+    if (text.isEmpty) return 'El stock es obligatorio.';
+    if (stock == null) return 'El stock debe ser un número entero.';
+    if (stock < 0) return 'El stock no puede ser negativo.';
     return null;
   }
 
@@ -129,13 +129,16 @@ class _ProductFormPageState extends State<ProductFormPage> {
         padding: const EdgeInsets.all(20),
         child: Form(
           key: formKey,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
           child: ListView(
             children: [
               TextFormField(
                 controller: nameController,
                 validator: validateName,
                 inputFormatters: [
-                  FilteringTextInputFormatter.deny(RegExp(r'\s')),
+                  FilteringTextInputFormatter.allow(
+                    RegExp(r'[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]'),
+                  ),
                 ],
                 textCapitalization: TextCapitalization.sentences,
                 maxLength: 200,
@@ -149,7 +152,12 @@ class _ProductFormPageState extends State<ProductFormPage> {
                 controller: priceController,
                 validator: validatePrice,
                 inputFormatters: [
-                  FilteringTextInputFormatter.deny(RegExp(r'\s')),
+                  TextInputFormatter.withFunction((oldValue, newValue) {
+                    final isValid = RegExp(
+                      r'^$|^\d{1,8}([.,]\d{0,2})?$',
+                    ).hasMatch(newValue.text);
+                    return isValid ? newValue : oldValue;
+                  }),
                 ],
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
@@ -163,9 +171,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
               TextFormField(
                 controller: stockController,
                 validator: validateStock,
-                inputFormatters: [
-                  FilteringTextInputFormatter.deny(RegExp(r'\s')),
-                ],
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
                   labelText: 'Stock',
