@@ -17,33 +17,33 @@ Los dos equipos deben estar conectados a la misma red Wi-Fi.
 2. Permitir el puerto de la API en el Firewall de Windows. Ejecutar PowerShell como administrador:
 
    ```powershell
-   New-NetFirewallRule -DisplayName "API Productos 5156" -Direction Inbound -Protocol TCP -LocalPort 5156 -Action Allow
+   New-NetFirewallRule -DisplayName "API Productos 5050" -Direction Inbound -Protocol TCP -LocalPort 5050 -RemoteAddress LocalSubnet -Action Allow
    ```
 
 3. Iniciar la API desde `ProgramacionDisrtibuidaC`:
 
    ```powershell
-   dotnet run --launch-profile http
+   dotnet run --urls "http://0.0.0.0:5050"
    ```
 
-La API escucha en `http://0.0.0.0:5156`. En este equipo la IPv4 actual es `192.168.100.132`, pero puede cambiar al conectarse a otra red.
+La API escucha en `http://0.0.0.0:5050`. En este equipo la IPv4 actual es `192.168.100.132`, pero puede cambiar al conectarse a otra red.
 
 ### Equipo cliente
 
-1. Verificar desde el navegador que responde `http://IP_DEL_SERVIDOR:5156/swagger`.
+1. Verificar desde el navegador que responde `http://IP_DEL_SERVIDOR:5050/swagger`.
 2. Ejecutar Flutter indicando la dirección del servidor:
 
    ```powershell
-   flutter run --dart-define=API_BASE_URL=http://IP_DEL_SERVIDOR:5156
+   flutter run --dart-define=API_BASE_URL=http://IP_DEL_SERVIDOR:5050
    ```
 
 Ejemplo con la IP actual:
 
 ```powershell
-flutter run --dart-define=API_BASE_URL=http://192.168.100.132:5156
+flutter run --dart-define=API_BASE_URL=http://192.168.100.132:5050
 ```
 
-El emulador Android puede usar el valor predeterminado `http://10.0.2.2:5156` ejecutando simplemente `flutter run` cuando la API corre en el mismo equipo.
+El emulador Android usa el valor predeterminado `http://10.0.2.2:5050` ejecutando simplemente `flutter run` cuando la API corre en el mismo equipo.
 
 ## Verificación funcional
 

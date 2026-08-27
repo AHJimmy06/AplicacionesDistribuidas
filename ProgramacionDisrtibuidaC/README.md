@@ -30,15 +30,15 @@ El script crea `AppDistribuidas_2026_DB` y `dbo.Product` si no existen. También
 
 ```powershell
 dotnet restore
-dotnet run --launch-profile http
+dotnet run --urls "http://0.0.0.0:5050"
 ```
 
-La documentación Swagger queda disponible en `http://localhost:5156/swagger` y, desde otro equipo de la misma red, en `http://IP_DEL_SERVIDOR:5156/swagger`.
+La documentación Swagger queda disponible en `http://localhost:5050/swagger` y, desde otro equipo de la misma red, en `http://IP_DEL_SERVIDOR:5050/swagger`.
 
 Para permitir el acceso desde la red, ejecutar PowerShell como administrador:
 
 ```powershell
-New-NetFirewallRule -DisplayName "API Productos 5156" -Direction Inbound -Protocol TCP -LocalPort 5156 -Action Allow
+New-NetFirewallRule -DisplayName "API Productos 5050" -Direction Inbound -Protocol TCP -LocalPort 5050 -RemoteAddress LocalSubnet -Action Allow
 ```
 
 ## Control de concurrencia

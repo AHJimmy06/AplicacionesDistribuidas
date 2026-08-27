@@ -19,7 +19,7 @@ No se guardan dependencias ni resultados de compilación en GitHub. .NET restaur
 
    ```powershell
    dotnet restore
-   dotnet run --launch-profile http
+   dotnet run --urls "http://0.0.0.0:5050"
    ```
 
 Los comandos deben ejecutarse dentro de `ProgramacionDisrtibuidaC`.
@@ -30,7 +30,7 @@ Dentro de `app_001_ad`, ejecutar:
 
 ```powershell
 flutter pub get
-flutter run --dart-define=API_BASE_URL=http://IP_DEL_SERVIDOR:5156
+flutter run
 ```
 
 Los dos equipos deben estar conectados a la misma red. La guía de firewall y comprobación de conectividad se encuentra en `app_001_ad/README.md`.
@@ -42,6 +42,6 @@ Para cambiar quién actúa como servidor:
 1. Detener la API del primer equipo.
 2. Preparar SQL Server y ejecutar la API en el segundo equipo.
 3. Consultar la nueva IPv4 con `ipconfig`.
-4. Reiniciar Flutter en el primer equipo utilizando la nueva dirección en `API_BASE_URL`.
+4. Reiniciar Flutter en el primer equipo con `flutter run --dart-define=API_BASE_URL=http://IP_DEL_SERVIDOR:5050`.
 
 Cada SQL Server mantiene su propia copia de los datos. El script crea la estructura de la tabla, no sincroniza registros entre los equipos.

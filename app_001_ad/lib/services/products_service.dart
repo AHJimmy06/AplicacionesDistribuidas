@@ -7,7 +7,7 @@ import 'package:http/http.dart' as http;
 class ProductsService {
   static const String _baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://10.0.2.2:5156',
+    defaultValue: 'http://10.0.2.2:5050',
   );
 
   final String url;
