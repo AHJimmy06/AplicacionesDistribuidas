@@ -1,0 +1,36 @@
+# Workspace tools and IDEs
+.atl/
+.vs/
+.idea/
+*.iml
+*.ipr
+*.iws
+*.suo
+*.user
+*.log
+.DS_Store
+
+# ASP.NET Core and .NET
+**/bin/
+**/obj/
+**/appsettings.Development.json
+!**/appsettings.Development.example.json
+**/Properties/PublishProfiles/*.pubxml.user
+
+# Flutter and Dart
+**/.dart_tool/
+**/.flutter-plugins-dependencies
+**/.pub-cache/
+**/.pub/
+**/build/
+**/coverage/
+**/doc/api/
+**/ios/Flutter/.last_build_id
+**/.widget_preview/
+
+# Generated application packages and symbols
+**/android/app/debug/
+**/android/app/profile/
+**/android/app/release/
+**/app.*.symbols
+**/app.*.map.json
