@@ -12,7 +12,7 @@ Las dependencias NuGet no se guardan en GitHub. El SDK las descarga desde las re
 
 ## Base de datos
 
-1. Abrir `SQLQuery1.sql` en SQL Server Management Studio.
+1. Abrir `../SQLQuery1.sql` en SQL Server Management Studio.
 2. Conectarse a la instancia local de SQL Server.
 3. Ejecutar el script completo.
 
