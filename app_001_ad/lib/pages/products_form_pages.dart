@@ -1,6 +1,7 @@
 import 'package:app_001_ad/models/products.dart';
 import 'package:app_001_ad/services/products_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class ProductFormPage extends StatefulWidget {
   const ProductFormPage({super.key, this.product});
@@ -77,14 +78,21 @@ class _ProductFormPageState extends State<ProductFormPage> {
   }
 
   String? validateName(String? value) {
-    final name = value?.trim() ?? '';
-    if (name.isEmpty) return 'Name is required.';
+    final name = value ?? '';
+    if (name.trim().isEmpty) return 'Name is required.';
+    if (RegExp(r'\s').hasMatch(name)) return 'Name cannot contain spaces.';
     if (name.length < 2) return 'Name must have at least 2 characters.';
     if (name.length > 200) return 'Name cannot exceed 200 characters.';
+    if (!RegExp(r'^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ]+$').hasMatch(name)) {
+      return 'Name can only contain letters and numbers, without spaces.';
+    }
     return null;
   }
 
   String? validatePrice(String? value) {
+    if (RegExp(r'\s').hasMatch(value ?? '')) {
+      return 'Price cannot contain spaces.';
+    }
     final text = value?.trim().replaceAll(',', '.') ?? '';
     final price = double.tryParse(text);
     if (text.isEmpty) return 'Price is required.';
@@ -100,6 +108,9 @@ class _ProductFormPageState extends State<ProductFormPage> {
   }
 
   String? validateStock(String? value) {
+    if (RegExp(r'\s').hasMatch(value ?? '')) {
+      return 'Stock cannot contain spaces.';
+    }
     final text = value?.trim() ?? '';
     final stock = int.tryParse(text);
     if (text.isEmpty) return 'Stock is required.';
@@ -123,6 +134,9 @@ class _ProductFormPageState extends State<ProductFormPage> {
               TextFormField(
                 controller: nameController,
                 validator: validateName,
+                inputFormatters: [
+                  FilteringTextInputFormatter.deny(RegExp(r'\s')),
+                ],
                 textCapitalization: TextCapitalization.sentences,
                 maxLength: 200,
                 decoration: const InputDecoration(
@@ -134,6 +148,9 @@ class _ProductFormPageState extends State<ProductFormPage> {
               TextFormField(
                 controller: priceController,
                 validator: validatePrice,
+                inputFormatters: [
+                  FilteringTextInputFormatter.deny(RegExp(r'\s')),
+                ],
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
@@ -146,6 +163,9 @@ class _ProductFormPageState extends State<ProductFormPage> {
               TextFormField(
                 controller: stockController,
                 validator: validateStock,
+                inputFormatters: [
+                  FilteringTextInputFormatter.deny(RegExp(r'\s')),
+                ],
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
                   labelText: 'Stock',

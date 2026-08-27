@@ -8,7 +8,9 @@ namespace ProgramacionDisrtibuidaC.Models
 
         [Required]
         [StringLength(200, MinimumLength = 2)]
-        [RegularExpression(@".*\S.*", ErrorMessage = "Name cannot contain only spaces.")]
+        [RegularExpression(
+            @"^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ]+$",
+            ErrorMessage = "Name can only contain letters and numbers, without spaces.")]
         public string Name { get; set; } = string.Empty;
 
         [Range(
