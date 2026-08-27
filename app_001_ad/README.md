@@ -2,6 +2,17 @@
 
 Aplicación Flutter que consume el CRUD de productos de la API ASP.NET Core.
 
+## Ejecución en la misma PC
+
+Con la API activa en el puerto `5050`, ejecutar desde `app_001_ad`:
+
+```powershell
+flutter pub get
+flutter run
+```
+
+Flutter usa `http://localhost:5050` en Windows, web y escritorio, y `http://10.0.2.2:5050` en el emulador Android. No se necesita indicar `API_BASE_URL` en estos casos.
+
 ## Prueba en red local
 
 Los dos equipos deben estar conectados a la misma red Wi-Fi.
@@ -43,7 +54,7 @@ Ejemplo con la IP actual:
 flutter run --dart-define=API_BASE_URL=http://192.168.100.132:5050
 ```
 
-El emulador Android usa el valor predeterminado `http://10.0.2.2:5050` ejecutando simplemente `flutter run` cuando la API corre en el mismo equipo.
+Para un celular físico u otro equipo siempre se debe indicar la IP del servidor mediante `API_BASE_URL`.
 
 ## Verificación funcional
 

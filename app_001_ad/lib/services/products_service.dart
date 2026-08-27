@@ -2,18 +2,26 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:app_001_ad/models/products.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 class ProductsService {
-  static const String _baseUrl = String.fromEnvironment(
+  static const String _configuredBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://10.0.2.2:5050',
   );
+
+  static String get _baseUrl {
+    if (_configuredBaseUrl.isNotEmpty) return _configuredBaseUrl;
+    return defaultTargetPlatform == TargetPlatform.android
+        ? 'http://10.0.2.2:5050'
+        : 'http://localhost:5050';
+  }
 
   final String url;
 
-  ProductsService({String baseUrl = _baseUrl})
-    : url = '${baseUrl.replaceFirst(RegExp(r'/$'), '')}/api/Products';
+  ProductsService({String? baseUrl})
+    : url =
+          '${(baseUrl ?? _baseUrl).replaceFirst(RegExp(r'/$'), '')}/api/Products';
 
   Future<List<Products>> getProducts() async {
     final response = await _send(http.get(Uri.parse(url)));

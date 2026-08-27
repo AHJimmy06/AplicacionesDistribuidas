@@ -33,6 +33,19 @@ flutter pub get
 flutter run
 ```
 
+Sin definir `API_BASE_URL`, Flutter selecciona automáticamente la dirección correcta cuando la API se ejecuta en la misma PC:
+
+| Destino de Flutter | Dirección de la API |
+| --- | --- |
+| Windows, web o escritorio | `http://localhost:5050` |
+| Emulador Android | `http://10.0.2.2:5050` |
+
+Un celular físico u otro equipo necesita la IP del servidor:
+
+```powershell
+flutter run --dart-define=API_BASE_URL=http://IP_DEL_SERVIDOR:5050
+```
+
 Los dos equipos deben estar conectados a la misma red. La guía de firewall y comprobación de conectividad se encuentra en `app_001_ad/README.md`.
 
 ## Intercambiar roles
