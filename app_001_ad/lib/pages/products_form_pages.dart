@@ -65,12 +65,32 @@ class _ProductFormPageState extends State<ProductFormPage> {
       Navigator.pop(
         context,
         widget.product != null
-            ? 'Product updated successfully.'
-            : 'Product created successfully.',
+            ? 'Producto actualizado correctamente.'
+            : 'Producto creado correctamente.',
       );
     } catch (error) {
       if (!mounted) return;
       setState(() => isSaving = false);
+
+      if (error is ProductsServiceException && error.isStaleData) {
+        await showDialog<void>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: const Text('Producto desactualizado'),
+            content: Text(error.message),
+            actions: [
+              FilledButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('Aceptar'),
+              ),
+            ],
+          ),
+        );
+        if (!mounted) return;
+        Navigator.pop(context);
+        return;
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(error.toString()), backgroundColor: Colors.red),
       );
@@ -123,7 +143,9 @@ class _ProductFormPageState extends State<ProductFormPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.product != null ? 'Edit Product' : 'New Product'),
+        title: Text(
+          widget.product != null ? 'Editar producto' : 'Nuevo producto',
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(20),
@@ -143,7 +165,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
                 textCapitalization: TextCapitalization.sentences,
                 maxLength: 200,
                 decoration: const InputDecoration(
-                  labelText: 'Name',
+                  labelText: 'Nombre',
                   border: OutlineInputBorder(),
                 ),
               ),
@@ -163,7 +185,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
                   decimal: true,
                 ),
                 decoration: const InputDecoration(
-                  labelText: 'Price',
+                  labelText: 'Precio',
                   border: OutlineInputBorder(),
                 ),
               ),
@@ -174,7 +196,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
-                  labelText: 'Stock',
+                  labelText: 'Existencias',
                   border: OutlineInputBorder(),
                 ),
               ),
@@ -187,7 +209,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
                         height: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : Text(widget.product != null ? 'Update' : 'Save'),
+                    : Text(widget.product != null ? 'Actualizar' : 'Guardar'),
               ),
             ],
           ),

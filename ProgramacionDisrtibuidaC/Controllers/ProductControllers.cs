@@ -26,7 +26,7 @@ namespace ProgramacionDisrtibuidaC.Controllers
             int id, Product product
             ) {
             if (id != product.Id)
-                return BadRequest(new { message = "The route ID must match the product ID." });
+                return BadRequest(new { message = "El ID de la ruta debe coincidir con el ID del producto." });
 
             product.Name = product.Name.Trim();
 
@@ -38,7 +38,7 @@ namespace ProgramacionDisrtibuidaC.Controllers
             {
                 return Conflict(new
                 {
-                    message = "The product was modified by another client. Reload it and try again.",
+                    message = "Otro cliente modificó el producto. Recárguelo e inténtelo nuevamente.",
                     currentVersion = currentProduct.Version
                 });
             }
@@ -56,7 +56,7 @@ namespace ProgramacionDisrtibuidaC.Controllers
             {
                 return Conflict(new
                 {
-                    message = "The product was modified by another client. Reload it and try again."
+                    message = "Otro cliente modificó el producto. Recárguelo e inténtelo nuevamente."
                 });
             }
             return NoContent();

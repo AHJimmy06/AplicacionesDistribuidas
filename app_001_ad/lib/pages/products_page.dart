@@ -43,27 +43,27 @@ class _ProductsPageState extends State<ProductsPage> {
       ),
     );
 
-    if (!mounted || message == null) return;
+    if (!mounted) return;
     refreshProducts();
-    showMessage(message);
+    if (message != null) showMessage(message);
   }
 
   Future<void> confirmDelete(Products product) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete product?'),
+        title: const Text('¿Eliminar producto?'),
         content: Text(
-          'Are you sure you want to delete "${product.name}"? This action cannot be undone.',
+          '¿Está seguro de que desea eliminar "${product.name}"? Esta acción no se puede deshacer.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: const Text('Cancelar'),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
+            child: const Text('Eliminar'),
           ),
         ],
       ),
@@ -75,9 +75,29 @@ class _ProductsPageState extends State<ProductsPage> {
       await productsService.deleteProduct(product.id);
       if (!mounted) return;
       refreshProducts();
-      showMessage('Product deleted successfully.');
+      showMessage('Producto eliminado correctamente.');
     } catch (error) {
       if (!mounted) return;
+
+      if (error is ProductsServiceException && error.isStaleData) {
+        await showDialog<void>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: const Text('Producto desactualizado'),
+            content: Text(error.message),
+            actions: [
+              FilledButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('Aceptar'),
+              ),
+            ],
+          ),
+        );
+        if (!mounted) return;
+        refreshProducts();
+        return;
+      }
+
       showMessage(error.toString(), isError: true);
     }
   }
@@ -85,7 +105,7 @@ class _ProductsPageState extends State<ProductsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Products JA')),
+      appBar: AppBar(title: const Text('Productos JA')),
       floatingActionButton: FloatingActionButton(
         onPressed: openProductForm,
         child: const Icon(Icons.add),
@@ -110,7 +130,7 @@ class _ProductsPageState extends State<ProductsPage> {
                     const SizedBox(height: 12),
                     FilledButton(
                       onPressed: refreshProducts,
-                      child: const Text('Retry'),
+                      child: const Text('Reintentar'),
                     ),
                   ],
                 ),
@@ -120,7 +140,7 @@ class _ProductsPageState extends State<ProductsPage> {
 
           final products = snapshot.data ?? [];
           if (products.isEmpty) {
-            return const Center(child: Text('No products found.'));
+            return const Center(child: Text('No se encontraron productos.'));
           }
 
           return RefreshIndicator(
@@ -137,19 +157,19 @@ class _ProductsPageState extends State<ProductsPage> {
                   child: ListTile(
                     title: Text(product.name),
                     subtitle: Text(
-                      'Price: \$${product.price.toStringAsFixed(2)}\n'
-                      'Stock: ${product.stock}',
+                      'Precio: \$${product.price.toStringAsFixed(2)}\n'
+                      'Existencias: ${product.stock}',
                     ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          tooltip: 'Edit',
+                          tooltip: 'Editar',
                           icon: const Icon(Icons.edit),
                           onPressed: () => openProductForm(product: product),
                         ),
                         IconButton(
-                          tooltip: 'Delete',
+                          tooltip: 'Eliminar',
                           icon: const Icon(Icons.delete),
                           onPressed: () => confirmDelete(product),
                         ),

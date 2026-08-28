@@ -32,7 +32,8 @@ class ProductsService {
     }
 
     throw ProductsServiceException(
-      _errorMessage(response, 'Could not load products.'),
+      _errorMessage(response, 'No se pudieron cargar los productos.'),
+      statusCode: response.statusCode,
     );
   }
 
@@ -47,7 +48,8 @@ class ProductsService {
 
     if (response.statusCode != 201 && response.statusCode != 200) {
       throw ProductsServiceException(
-        _errorMessage(response, 'Could not create the product.'),
+        _errorMessage(response, 'No se pudo crear el producto.'),
+        statusCode: response.statusCode,
       );
     }
   }
@@ -63,7 +65,8 @@ class ProductsService {
 
     if (response.statusCode != 204 && response.statusCode != 200) {
       throw ProductsServiceException(
-        _errorMessage(response, 'Could not update the product.'),
+        _errorMessage(response, 'No se pudo actualizar el producto.'),
+        statusCode: response.statusCode,
       );
     }
   }
@@ -73,7 +76,8 @@ class ProductsService {
 
     if (response.statusCode != 204 && response.statusCode != 200) {
       throw ProductsServiceException(
-        _errorMessage(response, 'Could not delete the product.'),
+        _errorMessage(response, 'No se pudo eliminar el producto.'),
+        statusCode: response.statusCode,
       );
     }
   }
@@ -82,10 +86,13 @@ class ProductsService {
     try {
       return await request.timeout(const Duration(seconds: 10));
     } on TimeoutException {
-      throw const ProductsServiceException('The API did not respond in time.');
+      throw const ProductsServiceException(
+        'La API no respondió dentro del tiempo esperado.',
+      );
     } on http.ClientException {
       throw const ProductsServiceException(
-        'Could not connect to the API. Check the server address and network.',
+        'No se pudo conectar con la API. Verifique la dirección del servidor '
+        'y la red.',
       );
     }
   }
@@ -94,7 +101,7 @@ class ProductsService {
     try {
       final body = jsonDecode(response.body);
       if (body is Map<String, dynamic>) {
-        final message = body['message'] ?? body['detail'] ?? body['title'];
+        final message = body['message'];
         if (message is String && message.isNotEmpty) return message;
 
         final errors = body['errors'];
@@ -106,6 +113,9 @@ class ProductsService {
               .toList();
           if (messages.isNotEmpty) return messages.join('\n');
         }
+
+        final detail = body['detail'] ?? body['title'];
+        if (detail is String && detail.isNotEmpty) return detail;
       }
     } on FormatException {
       // Some server errors do not return JSON.
@@ -117,8 +127,11 @@ class ProductsService {
 
 class ProductsServiceException implements Exception {
   final String message;
+  final int? statusCode;
 
-  const ProductsServiceException(this.message);
+  const ProductsServiceException(this.message, {this.statusCode});
+
+  bool get isStaleData => statusCode == 404 || statusCode == 409;
 
   @override
   String toString() => message;
