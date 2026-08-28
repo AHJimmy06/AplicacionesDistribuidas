@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app_001_ad/models/products.dart';
 import 'package:app_001_ad/pages/products_form_pages.dart';
 import 'package:app_001_ad/services/products_service.dart';
@@ -14,28 +16,66 @@ class ProductsPage extends StatefulWidget {
 }
 
 class _ProductsPageState extends State<ProductsPage> {
+  static const refreshInterval = Duration(seconds: 3);
+
   final ProductsService productsService = ProductsService();
   final Set<int> changingStatus = {};
-  late Future<List<Products>> futureProducts;
+  final List<Products> products = [];
   ProductStatusFilter selectedFilter = ProductStatusFilter.all;
+  Timer? refreshTimer;
+  Object? loadError;
+  bool isInitialLoading = true;
+  bool isRefreshing = false;
+  bool hasPendingRefresh = false;
 
   @override
   void initState() {
     super.initState();
-    futureProducts = productsService.getProducts();
+    refreshProducts();
+    refreshTimer = Timer.periodic(refreshInterval, (_) => refreshProducts());
   }
 
-  void refreshProducts() {
-    setState(() {
-      futureProducts = productsService.getProducts();
-    });
+  @override
+  void dispose() {
+    refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> refreshProducts() async {
+    if (isRefreshing) {
+      hasPendingRefresh = true;
+      return;
+    }
+    isRefreshing = true;
+
+    try {
+      final updatedProducts = await productsService.getProducts();
+      if (!mounted) return;
+      setState(() {
+        products
+          ..clear()
+          ..addAll(updatedProducts);
+        loadError = null;
+        isInitialLoading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        if (products.isEmpty) loadError = error;
+        isInitialLoading = false;
+      });
+    } finally {
+      isRefreshing = false;
+      if (hasPendingRefresh && mounted) {
+        hasPendingRefresh = false;
+        unawaited(refreshProducts());
+      }
+    }
   }
 
   void changeFilter(Set<ProductStatusFilter> selection) {
-    setState(() {
-      selectedFilter = selection.first;
-      futureProducts = productsService.getProducts();
-    });
+    setState(() => selectedFilter = selection.first);
+    refreshProducts();
   }
 
   void showMessage(String message, {bool isError = false}) {
@@ -165,10 +205,7 @@ class _ProductsPageState extends State<ProductsPage> {
 
   Widget buildProductsTable(List<Products> products) {
     return RefreshIndicator(
-      onRefresh: () async {
-        refreshProducts();
-        await futureProducts;
-      },
+      onRefresh: refreshProducts,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.symmetric(vertical: 12),
@@ -254,6 +291,208 @@ class _ProductsPageState extends State<ProductsPage> {
     );
   }
 
+  List<Products> get filteredProducts {
+    return switch (selectedFilter) {
+      ProductStatusFilter.all => List.of(products),
+      ProductStatusFilter.active =>
+        products.where((product) => product.isActive).toList(),
+      ProductStatusFilter.inactive =>
+        products.where((product) => !product.isActive).toList(),
+    };
+  }
+
+  String get emptyMessage {
+    return switch (selectedFilter) {
+      ProductStatusFilter.all => 'No se encontraron productos.',
+      ProductStatusFilter.active => 'No se encontraron productos activos.',
+      ProductStatusFilter.inactive => 'No se encontraron productos inactivos.',
+    };
+  }
+
+  Widget buildFilterSelector({required bool isCompact}) {
+    if (isCompact) {
+      return DropdownButton<ProductStatusFilter>(
+        value: selectedFilter,
+        isExpanded: true,
+        underline: const SizedBox.shrink(),
+        items: const [
+          DropdownMenuItem(
+            value: ProductStatusFilter.all,
+            child: Text('Todos'),
+          ),
+          DropdownMenuItem(
+            value: ProductStatusFilter.active,
+            child: Text('Activos'),
+          ),
+          DropdownMenuItem(
+            value: ProductStatusFilter.inactive,
+            child: Text('Inactivos'),
+          ),
+        ],
+        onChanged: (value) {
+          if (value != null) changeFilter({value});
+        },
+      );
+    }
+
+    return SegmentedButton<ProductStatusFilter>(
+      segments: const [
+        ButtonSegment(
+          value: ProductStatusFilter.all,
+          label: Text('Todos'),
+          icon: Icon(Icons.list_alt),
+        ),
+        ButtonSegment(
+          value: ProductStatusFilter.active,
+          label: Text('Activos'),
+          icon: Icon(Icons.check_circle_outline),
+        ),
+        ButtonSegment(
+          value: ProductStatusFilter.inactive,
+          label: Text('Inactivos'),
+          icon: Icon(Icons.pause_circle_outline),
+        ),
+      ],
+      selected: {selectedFilter},
+      onSelectionChanged: changeFilter,
+    );
+  }
+
+  Widget buildProductCards(List<Products> products) {
+    return RefreshIndicator(
+      onRefresh: refreshProducts,
+      child: ListView.separated(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(12),
+        itemCount: products.length,
+        separatorBuilder: (context, index) => const SizedBox(height: 8),
+        itemBuilder: (context, index) {
+          final product = products[index];
+          final isChanging = changingStatus.contains(product.id);
+
+          return Card(
+            margin: EdgeInsets.zero,
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      buildProductImage(product),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              product.name,
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              product.description,
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      Chip(
+                        avatar: const Icon(Icons.attach_money, size: 18),
+                        label: Text(product.price.toStringAsFixed(2)),
+                      ),
+                      Chip(
+                        avatar: const Icon(
+                          Icons.inventory_2_outlined,
+                          size: 18,
+                        ),
+                        label: Text('Existencias: ${product.stock}'),
+                      ),
+                    ],
+                  ),
+                  const Divider(),
+                  Row(
+                    children: [
+                      const Text('Activo'),
+                      Switch(
+                        value: product.isActive,
+                        onChanged: isChanging
+                            ? null
+                            : (value) => changeProductStatus(product, value),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        tooltip: 'Editar',
+                        icon: const Icon(Icons.edit),
+                        onPressed: () => openProductForm(product: product),
+                      ),
+                      IconButton(
+                        tooltip: 'Eliminar',
+                        icon: const Icon(Icons.delete),
+                        onPressed: () => confirmDelete(product),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget buildProductsContent({required bool isCompact}) {
+    if (isInitialLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (loadError != null && products.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(loadError.toString(), textAlign: TextAlign.center),
+              const SizedBox(height: 12),
+              FilledButton(
+                onPressed: refreshProducts,
+                child: const Text('Reintentar'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final visibleProducts = filteredProducts;
+    if (visibleProducts.isEmpty) {
+      return RefreshIndicator(
+        onRefresh: refreshProducts,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(height: 280, child: Center(child: Text(emptyMessage))),
+          ],
+        ),
+      );
+    }
+
+    return isCompact
+        ? buildProductCards(visibleProducts)
+        : buildProductsTable(visibleProducts);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -263,90 +502,29 @@ class _ProductsPageState extends State<ProductsPage> {
         tooltip: 'Nuevo producto',
         child: const Icon(Icons.add),
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-            child: SegmentedButton<ProductStatusFilter>(
-              segments: const [
-                ButtonSegment(
-                  value: ProductStatusFilter.all,
-                  label: Text('Todos'),
-                  icon: Icon(Icons.list_alt),
-                ),
-                ButtonSegment(
-                  value: ProductStatusFilter.active,
-                  label: Text('Activos'),
-                  icon: Icon(Icons.check_circle_outline),
-                ),
-                ButtonSegment(
-                  value: ProductStatusFilter.inactive,
-                  label: Text('Inactivos'),
-                  icon: Icon(Icons.pause_circle_outline),
-                ),
-              ],
-              selected: {selectedFilter},
-              onSelectionChanged: changeFilter,
-            ),
-          ),
-          Expanded(
-            child: FutureBuilder<List<Products>>(
-              future: futureProducts,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (snapshot.hasError) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            snapshot.error.toString(),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 12),
-                          FilledButton(
-                            onPressed: refreshProducts,
-                            child: const Text('Reintentar'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isCompact = constraints.maxWidth < 700;
 
-                final products = switch (selectedFilter) {
-                  ProductStatusFilter.all => snapshot.data ?? [],
-                  ProductStatusFilter.active =>
-                    (snapshot.data ?? [])
-                        .where((product) => product.isActive)
-                        .toList(),
-                  ProductStatusFilter.inactive =>
-                    (snapshot.data ?? [])
-                        .where((product) => !product.isActive)
-                        .toList(),
-                };
-
-                if (products.isEmpty) {
-                  return Center(
-                    child: Text(switch (selectedFilter) {
-                      ProductStatusFilter.all => 'No se encontraron productos.',
-                      ProductStatusFilter.active =>
-                        'No se encontraron productos activos.',
-                      ProductStatusFilter.inactive =>
-                        'No se encontraron productos inactivos.',
-                    }),
-                  );
-                }
-
-                return buildProductsTable(products);
-              },
-            ),
-          ),
-        ],
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+                child: isCompact
+                    ? InputDecorator(
+                        decoration: const InputDecoration(
+                          labelText: 'Mostrar productos',
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                        ),
+                        child: buildFilterSelector(isCompact: true),
+                      )
+                    : buildFilterSelector(isCompact: false),
+              ),
+              Expanded(child: buildProductsContent(isCompact: isCompact)),
+            ],
+          );
+        },
       ),
     );
   }

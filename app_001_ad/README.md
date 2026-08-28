@@ -4,6 +4,8 @@ Aplicación Flutter que consume el CRUD de productos de la API ASP.NET Core.
 
 La pantalla principal usa un selector `Todos/Activos/Inactivos`. Al cambiar la selección, Flutter vuelve a consultar la API y muestra en la tabla los productos del estado elegido. La tabla ocupa todo el ancho disponible y conserva desplazamiento horizontal cuando las columnas necesitan más espacio.
 
+La presentación se adapta al ancho disponible: en pantallas menores de `700 px` muestra tarjetas y un selector desplegable; en pantallas amplias muestra la tabla completa y botones segmentados. Además, Flutter consulta la API automáticamente cada 3 segundos para reflejar cambios realizados por otros clientes o directamente en SQL Server sin interrumpir la vista actual.
+
 ## Ejecución en la misma PC
 
 Con la API activa en el puerto `5050`, ejecutar desde `app_001_ad`:

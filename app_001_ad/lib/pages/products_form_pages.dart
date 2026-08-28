@@ -189,105 +189,117 @@ class _ProductFormPageState extends State<ProductFormPage> {
           widget.product != null ? 'Editar producto' : 'Nuevo producto',
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Form(
-          key: formKey,
-          autovalidateMode: AutovalidateMode.onUserInteraction,
-          child: ListView(
-            children: [
-              TextFormField(
-                controller: nameController,
-                validator: validateName,
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(
-                    RegExp(r'[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]'),
-                  ),
-                ],
-                textCapitalization: TextCapitalization.sentences,
-                maxLength: 200,
-                decoration: const InputDecoration(
-                  labelText: 'Nombre',
-                  border: OutlineInputBorder(),
+      body: LayoutBuilder(
+        builder: (context, constraints) => Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: constraints.maxWidth < 600 ? 12 : 24,
+                vertical: 20,
+              ),
+              child: Form(
+                key: formKey,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                child: ListView(
+                  children: [
+                    TextFormField(
+                      controller: nameController,
+                      validator: validateName,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                          RegExp(r'[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]'),
+                        ),
+                      ],
+                      textCapitalization: TextCapitalization.sentences,
+                      maxLength: 200,
+                      decoration: const InputDecoration(
+                        labelText: 'Nombre',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    TextFormField(
+                      controller: priceController,
+                      validator: validatePrice,
+                      inputFormatters: [
+                        TextInputFormatter.withFunction((oldValue, newValue) {
+                          final isValid = RegExp(r'^$|^\d{1,8}([.,]\d{0,2})?$')
+                              .hasMatch(newValue.text);
+                          return isValid ? newValue : oldValue;
+                        }),
+                      ],
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      decoration: const InputDecoration(
+                        labelText: 'Precio',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    TextFormField(
+                      controller: stockController,
+                      validator: validateStock,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Existencias',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    TextFormField(
+                      controller: descriptionController,
+                      validator: validateDescription,
+                      maxLength: 500,
+                      maxLines: 3,
+                      decoration: const InputDecoration(
+                        labelText: 'Descripción',
+                        alignLabelWithHint: true,
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    TextFormField(
+                      controller: imageUrlController,
+                      validator: validateImageUrl,
+                      maxLength: 2048,
+                      keyboardType: TextInputType.url,
+                      autocorrect: false,
+                      decoration: const InputDecoration(
+                        labelText: 'URL de la imagen',
+                        hintText: 'https://ejemplo.com/producto.png',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Producto activo'),
+                      subtitle: Text(isActive ? 'Sí' : 'No'),
+                      value: isActive,
+                      onChanged: isSaving
+                          ? null
+                          : (value) => setState(() => isActive = value),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: isSaving ? null : saveProduct,
+                      child: isSaving
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Text(
+                              widget.product != null ? 'Actualizar' : 'Guardar',
+                            ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 20),
-              TextFormField(
-                controller: priceController,
-                validator: validatePrice,
-                inputFormatters: [
-                  TextInputFormatter.withFunction((oldValue, newValue) {
-                    final isValid = RegExp(r'^$|^\d{1,8}([.,]\d{0,2})?$')
-                        .hasMatch(newValue.text);
-                    return isValid ? newValue : oldValue;
-                  }),
-                ],
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                decoration: const InputDecoration(
-                  labelText: 'Precio',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 20),
-              TextFormField(
-                controller: stockController,
-                validator: validateStock,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Existencias',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 20),
-              TextFormField(
-                controller: descriptionController,
-                validator: validateDescription,
-                maxLength: 500,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'Descripción',
-                  alignLabelWithHint: true,
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 20),
-              TextFormField(
-                controller: imageUrlController,
-                validator: validateImageUrl,
-                maxLength: 2048,
-                keyboardType: TextInputType.url,
-                autocorrect: false,
-                decoration: const InputDecoration(
-                  labelText: 'URL de la imagen',
-                  hintText: 'https://ejemplo.com/producto.png',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 8),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('Producto activo'),
-                subtitle: Text(isActive ? 'Sí' : 'No'),
-                value: isActive,
-                onChanged: isSaving
-                    ? null
-                    : (value) => setState(() => isActive = value),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: isSaving ? null : saveProduct,
-                child: isSaving
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(widget.product != null ? 'Actualizar' : 'Guardar'),
-              ),
-            ],
+            ),
           ),
         ),
       ),
