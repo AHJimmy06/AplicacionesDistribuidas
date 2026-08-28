@@ -1,5 +1,6 @@
 import 'package:app_001_ad/models/products.dart';
 import 'package:app_001_ad/services/products_service.dart';
+import 'package:app_001_ad/utils/timed_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -17,9 +18,12 @@ class _ProductFormPageState extends State<ProductFormPage> {
   final nameController = TextEditingController();
   final priceController = TextEditingController();
   final stockController = TextEditingController();
+  final descriptionController = TextEditingController();
+  final imageUrlController = TextEditingController();
   final ProductsService productsService = ProductsService();
 
   bool isSaving = false;
+  bool isActive = true;
 
   @override
   void initState() {
@@ -29,6 +33,9 @@ class _ProductFormPageState extends State<ProductFormPage> {
       nameController.text = product.name;
       priceController.text = product.price.toStringAsFixed(2);
       stockController.text = product.stock.toString();
+      descriptionController.text = product.description;
+      imageUrlController.text = product.imageUrl;
+      isActive = product.isActive;
     }
   }
 
@@ -37,6 +44,8 @@ class _ProductFormPageState extends State<ProductFormPage> {
     nameController.dispose();
     priceController.dispose();
     stockController.dispose();
+    descriptionController.dispose();
+    imageUrlController.dispose();
     super.dispose();
   }
 
@@ -51,6 +60,9 @@ class _ProductFormPageState extends State<ProductFormPage> {
       name: nameController.text.trim(),
       price: double.parse(priceController.text.trim().replaceAll(',', '.')),
       stock: int.parse(stockController.text.trim()),
+      description: descriptionController.text.trim(),
+      imageUrl: imageUrlController.text.trim(),
+      isActive: isActive,
       version: widget.product?.version ?? 0,
     );
 
@@ -73,7 +85,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
       setState(() => isSaving = false);
 
       if (error is ProductsServiceException && error.isStaleData) {
-        await showDialog<void>(
+        await showTimedDialog<void>(
           context: context,
           builder: (dialogContext) => AlertDialog(
             title: const Text('Producto desactualizado'),
@@ -92,7 +104,11 @@ class _ProductFormPageState extends State<ProductFormPage> {
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.toString()), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text(error.toString()),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 4),
+        ),
       );
     }
   }
@@ -100,7 +116,8 @@ class _ProductFormPageState extends State<ProductFormPage> {
   String? validateName(String? value) {
     final name = value ?? '';
     if (name.trim().isEmpty) return 'El nombre es obligatorio.';
-    if (RegExp(r'\s').hasMatch(name)) return 'El nombre no puede tener espacios.';
+    if (RegExp(r'\s').hasMatch(name))
+      return 'El nombre no puede tener espacios.';
     if (name.length < 2) return 'El nombre debe tener al menos 2 letras.';
     if (name.length > 200) return 'El nombre no puede superar 200 letras.';
     if (!RegExp(r'^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]+$').hasMatch(name)) {
@@ -136,6 +153,31 @@ class _ProductFormPageState extends State<ProductFormPage> {
     if (text.isEmpty) return 'El stock es obligatorio.';
     if (stock == null) return 'El stock debe ser un número entero.';
     if (stock < 0) return 'El stock no puede ser negativo.';
+    return null;
+  }
+
+  String? validateDescription(String? value) {
+    final description = value?.trim() ?? '';
+    if (description.isEmpty) return 'La descripción es obligatoria.';
+    if (description.length > 500) {
+      return 'La descripción no puede superar 500 caracteres.';
+    }
+    return null;
+  }
+
+  String? validateImageUrl(String? value) {
+    final text = value?.trim() ?? '';
+    if (text.isEmpty) return 'La URL de la imagen es obligatoria.';
+    if (text.length > 2048) return 'La URL no puede superar 2048 caracteres.';
+
+    final uri = Uri.tryParse(text);
+    if (uri == null ||
+        !uri.hasAuthority ||
+        uri.host.isEmpty ||
+        (uri.scheme != 'http' && uri.scheme != 'https') ||
+        RegExp(r'\s').hasMatch(text)) {
+      return 'Ingrese una URL HTTP o HTTPS válida.';
+    }
     return null;
   }
 
@@ -175,9 +217,8 @@ class _ProductFormPageState extends State<ProductFormPage> {
                 validator: validatePrice,
                 inputFormatters: [
                   TextInputFormatter.withFunction((oldValue, newValue) {
-                    final isValid = RegExp(
-                      r'^$|^\d{1,8}([.,]\d{0,2})?$',
-                    ).hasMatch(newValue.text);
+                    final isValid = RegExp(r'^$|^\d{1,8}([.,]\d{0,2})?$')
+                        .hasMatch(newValue.text);
                     return isValid ? newValue : oldValue;
                   }),
                 ],
@@ -199,6 +240,41 @@ class _ProductFormPageState extends State<ProductFormPage> {
                   labelText: 'Existencias',
                   border: OutlineInputBorder(),
                 ),
+              ),
+              const SizedBox(height: 20),
+              TextFormField(
+                controller: descriptionController,
+                validator: validateDescription,
+                maxLength: 500,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: 'Descripción',
+                  alignLabelWithHint: true,
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 20),
+              TextFormField(
+                controller: imageUrlController,
+                validator: validateImageUrl,
+                maxLength: 2048,
+                keyboardType: TextInputType.url,
+                autocorrect: false,
+                decoration: const InputDecoration(
+                  labelText: 'URL de la imagen',
+                  hintText: 'https://ejemplo.com/producto.png',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 8),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Producto activo'),
+                subtitle: Text(isActive ? 'Sí' : 'No'),
+                value: isActive,
+                onChanged: isSaving
+                    ? null
+                    : (value) => setState(() => isActive = value),
               ),
               const SizedBox(height: 20),
               ElevatedButton(

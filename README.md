@@ -2,6 +2,8 @@
 
 Repositorio compartido que contiene una API ASP.NET Core, una aplicación Flutter y un script para crear la base de datos en SQL Server. Cada integrante puede ejecutar cualquiera de los dos proyectos para intercambiar los roles de servidor y cliente.
 
+La aplicación no utiliza roles de usuario. Cada producto incluye nombre, precio, existencias, descripción, URL de imagen y estado activo. Flutter presenta estos datos en una tabla y permite activar o desactivar cada producto.
+
 ## Proyectos
 
 - `ProgramacionDisrtibuidaC`: API REST conectada a SQL Server.
@@ -34,6 +36,8 @@ cd AplicacionesDistribuidas
 3. Ejecutar el script completo.
 
 El script crea la base de datos `AppDistribuidas_2026_DB` y la tabla `dbo.Product`.
+
+El script también actualiza instalaciones existentes sin eliminar productos: agrega `Description`, `ImageUrl` e `IsActive`, y conserva el contador de concurrencia `Version INT`. Debe ejecutarse nuevamente después de obtener esta versión del repositorio.
 
 ### 2. Crear la configuración local de la API
 
@@ -68,6 +72,10 @@ flutter run
 ```
 
 `flutter pub get` instala automáticamente las dependencias declaradas en `pubspec.yaml`.
+
+Las operaciones de creación, edición, activación, desactivación y eliminación se guardan mediante la API en SQL Server. La API comprueba `Version` al actualizar o eliminar y lo incrementa con cada modificación para impedir que un cliente sobrescriba cambios de otro.
+
+Las confirmaciones y avisos modales se cierran automáticamente después de cuatro segundos. Los mensajes de éxito o error también se muestran durante cuatro segundos.
 
 Sin definir `API_BASE_URL`, Flutter selecciona automáticamente la dirección correcta cuando la API se ejecuta en la misma PC:
 

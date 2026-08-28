@@ -27,7 +27,23 @@ namespace ProgramacionDisrtibuidaC.Models
         [Range(0, int.MaxValue, ErrorMessage = "El stock no puede ser negativo.")]
         public int Stock { get; set; }
 
+        [Required(ErrorMessage = "La descripción es obligatoria.")]
+        [StringLength(500, ErrorMessage = "La descripción no puede superar 500 caracteres.")]
+        [RegularExpression(
+            @"^[\s\S]*\S[\s\S]*$",
+            ErrorMessage = "La descripción es obligatoria.")]
+        public string Description { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "La URL de la imagen es obligatoria.")]
+        [StringLength(2048, ErrorMessage = "La URL no puede superar 2048 caracteres.")]
+        [RegularExpression(
+            @"^https?://[^/\s]+(?:/\S*)?$",
+            ErrorMessage = "Ingrese una URL HTTP o HTTPS válida.")]
+        public string ImageUrl { get; set; } = string.Empty;
+
+        public bool IsActive { get; set; } = true;
+
         [Range(0, int.MaxValue, ErrorMessage = "La versión no puede ser negativa.")]
-        public int Version { get; set; } = 0;
+        public int Version { get; set; }
     }
 }

@@ -29,10 +29,12 @@ namespace ProgramacionDisrtibuidaC.Controllers
                 return BadRequest(new { message = "El ID de la ruta debe coincidir con el ID del producto." });
 
             product.Name = product.Name.Trim();
+            product.Description = product.Description.Trim();
+            product.ImageUrl = product.ImageUrl.Trim();
 
             var currentProduct = await _context.Product.FindAsync(id);
             if (currentProduct == null)
-                return NotFound();
+                return NotFound(new { message = "El producto ya no existe." });
 
             if (currentProduct.Version != product.Version)
             {
@@ -46,6 +48,9 @@ namespace ProgramacionDisrtibuidaC.Controllers
             currentProduct.Name = product.Name;
             currentProduct.Price = product.Price;
             currentProduct.Stock = product.Stock;
+            currentProduct.Description = product.Description;
+            currentProduct.ImageUrl = product.ImageUrl;
+            currentProduct.IsActive = product.IsActive;
             currentProduct.Version++;
 
             try
@@ -63,13 +68,37 @@ namespace ProgramacionDisrtibuidaC.Controllers
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteProduct(int id) {
+        public async Task<IActionResult> DeleteProduct(
+            int id,
+            [FromQuery] int? version
+            ) {
+            if (version is null)
+                return BadRequest(new { message = "La versión del producto es obligatoria." });
+
             var product = await _context.Product.FindAsync(id);
             if (product == null)
-                return NotFound();
+                return NotFound(new { message = "El producto ya fue eliminado por otro usuario." });
+
+            if (product.Version != version)
+            {
+                return Conflict(new
+                {
+                    message = "Otro cliente modificó el producto. Recargue la lista e inténtelo nuevamente."
+                });
+            }
 
             _context.Product.Remove(product);
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return Conflict(new
+                {
+                    message = "Otro cliente modificó el producto. Recargue la lista e inténtelo nuevamente."
+                });
+            }
 
             return NoContent();
         }
@@ -79,7 +108,7 @@ namespace ProgramacionDisrtibuidaC.Controllers
         {
             var product = await _context.Product.FindAsync(id);
             if (product == null)
-                return NotFound();
+                return NotFound(new { message = "El producto no existe." });
 
             return product;
         }
@@ -87,6 +116,8 @@ namespace ProgramacionDisrtibuidaC.Controllers
         [HttpPost]
         public async Task<ActionResult<Product>> CreateProduct(Product product) {
             product.Name = product.Name.Trim();
+            product.Description = product.Description.Trim();
+            product.ImageUrl = product.ImageUrl.Trim();
             product.Version = 0;
             _context.Product.Add(product);
             await _context.SaveChangesAsync();

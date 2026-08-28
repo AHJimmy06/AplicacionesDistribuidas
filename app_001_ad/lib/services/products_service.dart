@@ -71,8 +71,10 @@ class ProductsService {
     }
   }
 
-  Future<void> deleteProduct(int id) async {
-    final response = await _send(http.delete(Uri.parse('$url/$id')));
+  Future<void> deleteProduct(Products product) async {
+    final uri = Uri.parse('$url/${product.id}')
+        .replace(queryParameters: {'version': product.version.toString()});
+    final response = await _send(http.delete(uri));
 
     if (response.statusCode != 204 && response.statusCode != 200) {
       throw ProductsServiceException(
