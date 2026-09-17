@@ -20,9 +20,8 @@ namespace ProgramacionDisrtibuidaC.Data
                 .HasPrecision(10, 2);
 
             modelBuilder.Entity<Product>()
-                .Property(product => product.Version)
-                .HasDefaultValue(0)
-                .IsConcurrencyToken();
-        }
+                .Property(product => product.Versions)
+                .IsRowVersion();
+                    }
     }
 }

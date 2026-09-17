@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using ProgramacionDisrtibuidaC.Data;
+using ProgramacionDisrtibuidaC.Interfaces;
+using ProgramacionDisrtibuidaC.Repositories;
+using ProgramacionDisrtibuidaC.Services;
 
 namespace ProgramacionDisrtibuidaC
 {
@@ -11,6 +13,9 @@ namespace ProgramacionDisrtibuidaC
 
             // Add services to the container.
             builder.Services.AddControllers();
+            builder.Services.AddScoped<IProduct, ProductRepository>();
+
+            builder.Services.AddScoped<ProductService>();
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
             builder.Services.AddEndpointsApiExplorer();

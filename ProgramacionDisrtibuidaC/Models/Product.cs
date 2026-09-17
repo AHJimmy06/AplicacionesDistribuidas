@@ -43,7 +43,7 @@ namespace ProgramacionDisrtibuidaC.Models
 
         public bool IsActive { get; set; } = true;
 
-        [Range(0, int.MaxValue, ErrorMessage = "La versión no puede ser negativa.")]
-        public int Version { get; set; }
+        [Timestamp]
+        public byte[] Versions { get; set; } = default!;
     }
 }
