@@ -75,6 +75,8 @@ flutter run
 
 Las operaciones de creación, edición, activación, desactivación y eliminación se guardan mediante la API en SQL Server. La API comprueba `Version` al actualizar o eliminar y lo incrementa con cada modificación para impedir que un cliente sobrescriba cambios de otro.
 
+Cada cliente Flutter vuelve a consultar la API automáticamente cada 3 segundos. De esta manera, los cambios persistidos en SQL Server aparecen en las demás pantallas sin una recarga manual. En móviles se muestran tarjetas y en pantallas amplias se utiliza la tabla completa.
+
 Las confirmaciones y avisos modales se cierran automáticamente después de cuatro segundos. Los mensajes de éxito o error también se muestran durante cuatro segundos.
 
 Sin definir `API_BASE_URL`, Flutter selecciona automáticamente la dirección correcta cuando la API se ejecuta en la misma PC:
